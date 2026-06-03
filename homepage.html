@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Advanced Study Tracker Dashboard</title>
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="container">
+    <h1>⚡ Study Tracker</h1>
+    <p class="subtitle">Enter your details below to generate a custom timetable</p>
+    
+    <form class="form-grid">
+        <div class="full-width">
+            <label>Your Name</label>
+            <input type="text" name="name" required placeholder="e.g. Alex">
+        </div>
+
+        <div class="full-width">
+            <label>Name of the Test / Quiz</label>
+            <input type="text" name="user_test_name" required placeholder="e.g. Finals Chemistry">
+        </div>
+
+        <div>
+            <label>Total Chapters</label>
+            <input type="number" name="number_chapter" required placeholder="5">
+        </div>
+
+        <div>
+            <label>Days Remaining</label>
+            <input type="number" name="how_manydays" required placeholder="3">
+        </div>
+
+        <div class="full-width">
+            <label>Daily Study Capacity (Hours)</label>
+            <input type="number" step="0.1" name="hours_per_day" required placeholder="2.5">
+        </div>
+
+        <div>
+            <label>Starting Time (1-12)</label>
+            <input type="number" name="starting_time" min="1" max="12" required placeholder="6">
+        </div>
+
+        <div>
+            <label>AM or PM?</label>
+            <select name="starting_period">
+                <option value="am">AM</option>
+                <option value="pm">PM</option>
+            </select>
+        </div>
+        <div class="full-width">
+            <label>Time Interface Format</label>
+            <select name="time_method">
+                <option value="24">24-hour clock (18:00)</option>
+                <option value="12">12-hour clock (6:00 PM)</option>
+            </select>
+        </div>
+
+        <div class="full-width">
+            <button type="submit">Generate My Timetable</button>
+        </div>
+    </form>
+
+    <div id="timetable-output"></div>
+
+</div> 
+
+<script src="script.js"></script>
+</body>
+</html>
