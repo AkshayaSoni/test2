@@ -1,7 +1,18 @@
-document.querySelector('form').addEventListener('submit', function(e) {
+// Global tracking arrays pinned to the window so reloads don't orphan background tasks
+window.activeTimers = window.activeTimers || [];
+window.currentSubmissionId = window.currentSubmissionId || 0;
+
+document.getElementById('study-form').onsubmit = function(e) {
     e.preventDefault();
 
-    // Ask for permission the second they hit Generate
+    // Clear absolutely every background alarm running in the browser instantly
+    window.activeTimers.forEach(timerId => clearTimeout(timerId));
+    window.activeTimers = [];
+
+    // Advance the submission token to invalidate any slow-running asynchronous notifications
+    window.currentSubmissionId++;
+    const submissionId = window.currentSubmissionId;
+
     if ("Notification" in window) {
         Notification.requestPermission();
     }
@@ -14,7 +25,7 @@ document.querySelector('form').addEventListener('submit', function(e) {
     const hoursPerDay = parseFloat(document.querySelector('input[name="hours_per_day"]').value) || 0;
     const timeMethod = document.querySelector('select[name="time_method"]').value;
 
-    // --- 🚨 PYTHON AM/PM LOGIC TRANSLATED TO JS 🚨 ---
+    // --- PYTHON AM/PM LOGIC TRANSLATED TO JS ---
     let rawStartingHour = parseInt(document.querySelector('input[name="starting_time"]').value) || 6;
     const startingPeriod = document.querySelector('select[name="starting_period"]').value;
     
@@ -28,7 +39,6 @@ document.querySelector('form').addEventListener('submit', function(e) {
             startingHour += 12; // Convert PM to 24-hour clock for the math
         }
     }
-    // --------------------------------------------------
 
     const safeDaysLeft = daysLeft <= 0 ? 1 : daysLeft;
     const baseChaptersPerDay = Math.floor(totalChapters / safeDaysLeft);
@@ -79,19 +89,32 @@ document.querySelector('form').addEventListener('submit', function(e) {
             let endTime = new Date(startTime.getTime());
             endTime.setMinutes(endTime.getMinutes() + (studyHoursPerChapter * 60));
 
-            let clockFormat = timeMethod === "12" 
-                ? { hour: 'numeric', minute: '2-digit', hour12: true }
-                : { hour: '2-digit', minute: '2-digit', hour12: false };
+            let startStr = "";
+            let endStr = "";
 
-            let startStr = startTime.toLocaleTimeString('en-US', clockFormat);
-            let endStr = endTime.toLocaleTimeString('en-US', clockFormat);
+            // FIXED: Generates standard 12-hour format or handles 24-hour values with AM/PM strings appended
+            if (timeMethod === "12") {
+                startStr = startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                endStr = endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            } else {
+                let startRaw = startTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                let endRaw = endTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                
+                let startSuffix = startTime.getHours() >= 12 ? " PM" : " AM";
+                let endSuffix = endTime.getHours() >= 12 ? " PM" : " AM";
+
+                startStr = startRaw + startSuffix;
+                endStr = endRaw + endSuffix;
+            }
 
             let timeUntilStudy = startTime.getTime() - Date.now();
 
             if (timeUntilStudy > 0) {
                 scheduledAlarmsCount++;
                 
-                setTimeout(() => {
+                const exactTimer = setTimeout(() => {
+                    if (submissionId !== window.currentSubmissionId) return;
+
                     if (Notification.permission === "granted") {
                         new Notification("🔥 Time to Lock In!", {
                             body: `${name} okay and lock in study time is going to be ${startStr} to ${endStr} okay for your test - ${testName}`,
@@ -99,6 +122,7 @@ document.querySelector('form').addEventListener('submit', function(e) {
                         });
                     }
                 }, timeUntilStudy);
+                window.activeTimers.push(exactTimer);
             }
 
             timeSlotsHTML += `<div style="margin-bottom: 8px; color: #6366f1; font-weight: 600;">${startStr} - ${endStr}</div>`;
@@ -119,4 +143,4 @@ document.querySelector('form').addEventListener('submit', function(e) {
             body: `Your schedule is calculated! ${scheduledAlarmsCount} alarms have been queued up for your study sessions. Leave this tab open!`
         });
     }
-});
+};
