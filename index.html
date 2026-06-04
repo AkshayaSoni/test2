@@ -13,7 +13,7 @@
     <h1>⚡ Study Tracker</h1>
     <p class="subtitle">Enter your details below to generate a custom timetable</p>
     
-    <form class="form-grid">
+    <form id="study-form" class="form-grid" onsubmit="return false;">
         <div class="full-width">
             <label>Your Name</label>
             <input type="text" name="name" required placeholder="e.g. Alex">
@@ -21,7 +21,7 @@
 
         <div class="full-width">
             <label>Name of the Test / Quiz</label>
-            <input type="text" name="user_test_name" required placeholder="e.g. Finals Chemistry">
+            <input type="text" name="user_test_name" required oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" placeholder="e.g. Finals Chemistry">
         </div>
 
         <div>
